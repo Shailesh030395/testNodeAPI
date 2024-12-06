@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Connections {
+  id                 Int       @id @default(autoincrement())
+  companyName        String?
+  companyId          String?   @unique
+  tokenDetails       String?
+  createdDate        DateTime? @default(now())
+  modifiedDate       DateTime? @default(now())
+  createdBy          String?
+  modifiedBy         String?
+  status             String?
+  userId             Int?
+  user               User?     @relation(fields: [userId], references: [id])
+  isActiveConnection Boolean?  @default(false)
+}
+
+model User {
+  id                  Int           @id @default(autoincrement())
+  email               String?       @unique
+  firstName           String?
+  lastName            String?
+  phone               String?
+  password            String?
+  forgotPasswordToken String?
+  isVerified          Boolean       @default(false)
+  status              Boolean       @default(false)
+  profileImg          String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime?     @updatedAt
+  token               String?
+  createdBy           Int?
+  connections         Connections[]
+  companyRoles        CompanyRole[]
+  Rules               Rule[]
+}
+
+model ItemInventory {
+  id                   Int       @id @default(autoincrement())
+  listID               String
+  companyId            String
+  timeCreated          String
+  timeModified         String
+  editSequence         String?
+  name                 String
+  category             String?
+  fullName             String    @unique
+  salesDescription     String?
+  isActive             Boolean
+  sublevel             Int?
+  salesPrice           Float?
+  purchaseCost         Float?
+  reorderPoint         Int?
+  quantityOnHand       String?
+  averageCost          Float?
+  quantityOnOrder      Int?
+  quantityOnSalesOrder Int?
+  inventorySiteDetails Json?
+  createdDate          DateTime? @default(now())
+  modifiedDate         DateTime? @default(now())
+}
+
+model Log {
+  id         Int      @id @default(autoincrement())
+  entityName String
+  data       String
+  companyId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Role {
+  id              String        @id @default(uuid())
+  roleName        String
+  roleDescription String
+  isCompanyAdmin  Boolean       @default(false)
+  isAdminRole     Boolean       @default(false)
+  status          Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  users           CompanyRole[]
+}
+
+model CompanyRole {
+  id        Int      @id @default(autoincrement())
+  companyId String
+  userId    Int
+  roleId    String
+  status    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
+
+  @@unique([companyId, userId])
+}
+
+
+model Rule {
+  id              Int      @id @default(autoincrement())
+  effectiveDate   DateTime @default(now()) // Required field with default value set to today's date
+  ruleName        String   // Rule Name, required
+  productCategory String?  // Product Category, optional
+  countryIsoCode  String?  // Country ISO Code, optional
+  customer        String?  // Customer, optional
+  product         String?  // Product, optional
+  warrantyMonth   String?     // Warranty month as a number, optional
+  comments        String?  // Notes or comments, optional
+
+  companyId       String   // Foreign key for company
+  userId          Int      // Foreign key for user
+
+  createdAt       DateTime @default(now())  // Automatically set to current date and time when created
+  updatedAt       DateTime @updatedAt       // Automatically updated with current date and time when updated
+
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model productWarrantyDetails {
+  id                    Int      @id @default(autoincrement())
+  invoiceNumber         String?
+  invoiceReferenceNumber String?
+  invoiceDate           DateTime
+  itemName              String
+  itemDesc              String?
+  serialNumber          String
+  customerName          String
+  productCategory       String?
+  countryCode           String?
+  invoiceData           Json
+  companyId             String
+
+  expiryDate            DateTime?
+  isExtendWarranty      Boolean  @default(false)
+  extendedWarrantyMonths Int?
+  extendedBy            Int?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([companyId, serialNumber,itemName, customerName])
+
+}
